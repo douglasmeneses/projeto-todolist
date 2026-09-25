@@ -35,7 +35,7 @@ A estrutura da tabela `tarefas` é concisa e objetiva:
 | `id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Identificador único numérico |
 | `titulo` | `TEXT NOT NULL` | Descrição da tarefa |
 | `feito` | `INTEGER DEFAULT 0` (Boolean) | Status de conclusão (0 = pendente, 1 = concluída) |
-| `criado_em` | `DATETIME DEFAULT CURRENT_TIMESTAMP` | Data e hora de criação |
+| `criadoEm` | `TEXT NOT NULL` | Data e hora de criação |
 
 ---
 
