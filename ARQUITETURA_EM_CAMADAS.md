@@ -55,71 +55,155 @@ Para memorizar a função de cada camada, pense em um **restaurante**:
 
 Veja o ciclo de vida completo quando alguém faz um `POST /tarefas`:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Cliente as 🧑‍💻 Cliente HTTP
-    participant Routes as 📋 Routes
-    participant Controller as 🤵 Controller
-    participant Service as 👨‍🍳 Service
-    participant Repo as 🥫 Repository
-    participant Banco as 🗄️ SQLite
-
-    Cliente->>Routes: POST /tarefas {"titulo": "Comprar pão"}
-    Routes->>Controller: criarTarefa(req, res)
-    Note over Controller: Valida se o título veio e não é vazio
-    Controller->>Service: criarTarefa("Comprar pão")
-    Note over Service: Gera criadoEm = ISOString()
-    Service->>Repo: criar("Comprar pão", criadoEm)
-    Repo->>Banco: INSERT INTO tarefas... RETURNING *
-    Banco-->>Repo: Retorna Tarefa criada
-    Repo-->>Service: Retorna Tarefa
-    Service-->>Controller: Retorna Tarefa
-    Controller-->>Cliente: HTTP 201 Created + JSON da Tarefa
+```text
+ 🧑‍💻 CLIENTE                 📋 ROUTES                 🤵 CONTROLLER               👨‍🍳 SERVICE                🥫 REPOSITORY              🗄️ SQLITE (todolist.db)
+   │                         │                         │                         │                         │                         │
+   │ 1. POST /tarefas        │                         │                         │                         │                         │
+   │────────────────────────▶│                         │                         │                         │                         │
+   │                         │ 2. criarTarefa(req, res)│                         │                         │                         │
+   │                         │────────────────────────▶│                         │                         │                         │
+   │                         │                         │ 3. Valida entrada:      │                         │                         │
+   │                         │                         │    - body tem título?   │                         │                         │
+   │                         │                         │    - título é vazio?    │                         │                         │
+   │                         │                         │                         │                         │                         │
+   │                         │                         │ 4. criarTarefa(titulo)  │                         │                         │
+   │                         │                         │────────────────────────▶│                         │                         │
+   │                         │                         │                         │ 5. Regra de Negócio:    │                         │
+   │                         │                         │                         │    criadoEm = ISOString │                         │
+   │                         │                         │                         │                         │                         │
+   │                         │                         │                         │ 6. criar(titulo, data)  │                         │
+   │                         │                         │                         │────────────────────────▶│                         │
+   │                         │                         │                         │                         │ 7. INSERT INTO tarefas  │
+   │                         │                         │                         │                         │────────────────────────▶│
+   │                         │                         │                         │                         │                         │
+   │                         │                         │                         │                         │ 8. Registro inserido    │
+   │                         │                         │                         │                         │◀────────────────────────│
+   │                         │                         │                         │ 9. Retorna Tarefa       │                         │
+   │                         │                         │                         │◀────────────────────────│                         │
+   │                         │                         │ 10. Retorna Tarefa      │                         │                         │
+   │                         │                         │◀────────────────────────│                         │                         │
+   │ 11. HTTP 201 Created    │                         │                         │                         │                         │
+   │     + JSON da Tarefa    │                         │                         │                         │                         │
+   │◀──────────────────────────────────────────────────│                         │                         │                         │
 ```
 
 ---
 
 ## 🧩 4. O Mapa das Camadas
 
-```mermaid
-graph TD
-    Client["🧑‍💻 Cliente (Insomnia / Frontend)"]
-    
-    subgraph "Camada de Transporte HTTP"
-        Server["src/server.ts<br/>(Lê PORT e dá listen)"]
-        App["src/app.ts<br/>(Express, Middlewares, Rotas)"]
-        Routes["src/routes/tarefas.routes.ts<br/>(Roteamento / endpoints)"]
-        Controller["src/controllers/tarefas.controller.ts<br/>(req, res, status codes)"]
-    end
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 🧑‍💻 CLIENTE HTTP                                        │
+│                        (Insomnia, Postman, Frontend React)                             │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ Requisição HTTP (GET, POST, PUT, DELETE)
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                               CAMADA DE TRANSPORTE HTTP                                │
+│                                                                                        │
+│   src/server.ts ──────────▶ Lê a PORT do .env e inicia o servidor (app.listen)         │
+│         │                                                                              │
+│         ▼                                                                              │
+│   src/app.ts ─────────────▶ Configura Express, express.json() e registra as rotas      │
+│         │                                                                              │
+│         ▼                                                                              │
+│   src/routes/tarefas.routes.ts ──▶ Mapeia URLs e verbos HTTP:                          │
+│                                    GET  /          ──▶ listarTarefas                   │
+│                                    GET  /:id       ──▶ buscarTarefaPorId               │
+│                                    POST /          ──▶ criarTarefa                     │
+│                                    PUT  /:id       ──▶ atualizarTarefa                 │
+│                                    DELETE /:id     ──▶ deletarTarefa                   │
+│         │                                                                              │
+│         ▼                                                                              │
+│   src/controllers/tarefas.controller.ts ──▶ Garçom:                                    │
+│                                             - Recebe (req: Request)                    │
+│                                             - Valida dados de entrada (400)            │
+│                                             - Chama o Service                          │
+│                                             - Responde (res: Response) (200, 201, 204) │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ Chama funções em TypeScript
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                               CAMADA DE REGRAS DE NEGÓCIO                              │
+│                                                                                        │
+│   src/services/tarefas.service.ts ────────▶ Chef de Cozinha:                           │
+│                                             - Não conhece req, res nem SQL             │
+│                                             - Gera criadoEm (data atual em ISO)        │
+│                                             - Mescla dados antigos com novos (??)      │
+│                                             - Checa se o registro existe               │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ Chama funções de banco
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                CAMADA DE PERSISTÊNCIA / BANCO                          │
+│                                                                                        │
+│   src/repositories/tarefas.repository.ts ─▶ Despensa / Estoquista:                     │
+│                                             - Escreve e executa os comandos SQL        │
+│                                             - db.prepare("SELECT * FROM tarefas")      │
+│                                             - db.prepare("INSERT INTO tarefas...")     │
+│                                             - db.prepare("UPDATE tarefas SET...")      │
+│                                             - db.prepare("DELETE FROM tarefas...")     │
+│         │                                                                              │
+│         ▼                                                                              │
+│   src/banco.ts ───────────────────────────▶ Conecta no todolist.db e roda schema.sql   │
+│         │                                                                              │
+│         ▼                                                                              │
+│   todolist.db ────────────────────────────▶ Arquivo físico do SQLite no disco          │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 
-    subgraph "Camada de Regras da Aplicação"
-        Service["src/services/tarefas.service.ts<br/>(Regras de negócio e validações)"]
-    end
-
-    subgraph "Camada de Persistência / Dados"
-        Repo["src/repositories/tarefas.repository.ts<br/>(SQL nativo better-sqlite3)"]
-        Banco["src/banco.ts<br/>(Conexão SQLite)"]
-        DB[(todolist.db)]
-    end
-
-    subgraph "Contratos Globais"
-        Types["src/types/tarefa.ts<br/>(Interfaces e DTOs)"]
-    end
-
-    Client -->|HTTP Request| Server
-    Server --> App
-    App --> Routes
-    Routes --> Controller
-    Controller --> Service
-    Service --> Repo
-    Repo --> Banco
-    Banco --> DB
-
-    Types -. Tipa .-> Controller
-    Types -. Tipa .-> Service
-    Types -. Tipa .-> Repo
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              CONTRATOS GLOBAIS (TIPAGEM)                               │
+│                                                                                        │
+│   src/types/tarefa.ts ────────────────────▶ Tarefa, CriarTarefaDTO, AtualizarTarefaDTO │
+│                                             (Importado por Controller, Service e Repo) │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## ⚖️ 4.1. Antes vs Depois (A Lição de Arquitetura)
+
+```text
+   ANTES (Branch main):
+   ┌─────────────────────────────────────────────────────────┐
+   │                       src/server.ts                     │
+   │  [Express + Rotas + Regras + SQL SQLite + app.listen]   │
+   │                   (TUDO MISTURADO)                      │
+   └─────────────────────────────────────────────────────────┘
+
+   DEPOIS (Branch refactor/organizacao-camadas):
+   ┌───────────────────────────┐
+   │       src/server.ts       │ ──▶ Só liga o servidor na porta
+   └─────────────┬─────────────┘
+                 ▼
+   ┌───────────────────────────┐
+   │         src/app.ts        │ ──▶ Só configura o Express e middlewares
+   └─────────────┬─────────────┘
+                 ▼
+   ┌───────────────────────────┐
+   │ src/routes/tarefas...     │ ──▶ Só mapeia URLs e verbos HTTP
+   └─────────────┬─────────────┘
+                 ▼
+   ┌───────────────────────────┐
+   │ src/controllers/tarefas...│ ──▶ Só trata HTTP (req, res, status codes)
+   └─────────────┬─────────────┘
+                 ▼
+   ┌───────────────────────────┐
+   │ src/services/tarefas...   │ ──▶ Só cuida das regras e validações
+   └─────────────┬─────────────┘
+                 ▼
+   ┌───────────────────────────┐
+   │ src/repositories/tarefas..│ ──▶ Só executa SQL no SQLite
+   └─────────────┬─────────────┘
+                 ▼
+   ┌───────────────────────────┐
+   │       todolist.db         │ ──▶ Banco físico SQLite
+   └───────────────────────────┘
+```
+
+> 💡 **Pergunta de Ouro para fazer aos alunos:**  
+> *"Quando formos para a **Fase 3 (Prisma ORM)**, qual caixinha muda?"*  
+> **Resposta:** Apenas a caixinha `src/repositories/tarefas.repository.ts`! O Controller, o Service e as Rotas continuarão exatamente iguais. Essa é a lição do desacoplamento!
 
 ---
 
