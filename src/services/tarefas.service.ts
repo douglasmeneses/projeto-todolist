@@ -1,4 +1,4 @@
-import * as tarefaRepository from "../repositories/tarefa.repository.js";
+import * as tarefaRepository from "../repositories/tarefas.repository.js";
 import type { Tarefa, AtualizarTarefaDTO } from "../types/tarefa.js";
 
 export function listarTarefas(): Tarefa[] {
