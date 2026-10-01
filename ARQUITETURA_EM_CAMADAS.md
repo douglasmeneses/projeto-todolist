@@ -55,6 +55,8 @@ Para memorizar a função de cada camada, pense em um **restaurante**:
 
 Veja o ciclo de vida completo quando alguém faz um `POST /tarefas`:
 
+![Fluxo da Requisição HTTP em Camadas](./docs/images/fluxo_requisicao.jpg)
+
 ```text
  🧑‍💻 CLIENTE                 📋 ROUTES                 🤵 CONTROLLER               👨‍🍳 SERVICE                🥫 REPOSITORY              🗄️ SQLITE (todolist.db)
    │                         │                         │                         │                         │                         │
@@ -90,6 +92,8 @@ Veja o ciclo de vida completo quando alguém faz um `POST /tarefas`:
 ---
 
 ## 🧩 4. O Mapa das Camadas
+
+![Mapa da Arquitetura em Camadas](./docs/images/mapa_camadas.jpg)
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -162,6 +166,8 @@ Veja o ciclo de vida completo quando alguém faz um `POST /tarefas`:
 ---
 
 ## ⚖️ 4.1. Antes vs Depois (A Lição de Arquitetura)
+
+![Monolito vs Camadas](./docs/images/monolito_vs_camadas.jpg)
 
 ```text
    ANTES (Branch main):
