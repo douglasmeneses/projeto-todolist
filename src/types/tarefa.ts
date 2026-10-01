@@ -6,11 +6,11 @@ export interface Tarefa {
 }
 
 export interface CriarTarefaDTO {
-  titulo?: string;
+  titulo?: string | undefined;
 }
 
 export interface AtualizarTarefaDTO {
   // Data Transfer Object
-  titulo?: string;
-  feito?: number;
+  titulo?: string | undefined;
+  feito?: number | undefined;
 }

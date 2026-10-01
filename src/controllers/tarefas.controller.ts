@@ -1,15 +1,9 @@
 import type { Request, Response } from "express";
 import type { Tarefa, CriarTarefaDTO, AtualizarTarefaDTO } from "../types/tarefa.js";
-import {
-  buscarTodasTarefas,
-  buscarTarefaPorId as buscarTarefaPorIdNoBanco,
-  criarTarefa as criarTarefaNoBanco,
-  atualizarTarefa as atualizarTarefaNoBanco,
-  deletarTarefa as deletarTarefaNoBanco,
-} from "../models/tarefa.model.js";
+import * as tarefasService from "../services/tarefas.service.js";
 
 export function listarTarefas(req: Request, res: Response): void {
-  const tarefas: Tarefa[] = buscarTodasTarefas();
+  const tarefas: Tarefa[] = tarefasService.listarTarefas();
   res.json(tarefas); // status code 200 [OK]
 }
 
@@ -18,7 +12,8 @@ export function buscarTarefaPorId(
   res: Response,
 ): void {
   const idTarefa: number = Number(req.params.id);
-  const tarefaProcurada: Tarefa | undefined = buscarTarefaPorIdNoBanco(idTarefa);
+  const tarefaProcurada: Tarefa | undefined =
+    tarefasService.buscarTarefaPorId(idTarefa);
 
   if (!tarefaProcurada) {
     // falsy values: undefined, null, 0, "", false, NaN
@@ -49,7 +44,7 @@ export function criarTarefa(
     return;
   }
 
-  const novaTarefa: Tarefa = criarTarefaNoBanco(tituloFormatado);
+  const novaTarefa: Tarefa = tarefasService.criarTarefa(tituloFormatado);
 
   res.status(201).json(novaTarefa); // 201 -> CREATED
 }
@@ -59,23 +54,17 @@ export function atualizarTarefa(
   res: Response,
 ): void {
   const idTarefa: number = Number(req.params.id);
-  const tarefaProcurada: Tarefa | undefined = buscarTarefaPorIdNoBanco(idTarefa);
+  const { titulo, feito }: AtualizarTarefaDTO = req.body;
 
-  if (!tarefaProcurada) {
+  const tarefaAtualizada: Tarefa | undefined = tarefasService.atualizarTarefa(
+    idTarefa,
+    { titulo, feito },
+  );
+
+  if (!tarefaAtualizada) {
     res.status(404).send();
     return;
   }
-
-  const { titulo, feito }: AtualizarTarefaDTO = req.body;
-
-  const tituloFinal: string = titulo ?? tarefaProcurada.titulo;
-  const feitoFinal: number = feito ?? tarefaProcurada.feito;
-
-  const tarefaAtualizada: Tarefa = atualizarTarefaNoBanco(
-    idTarefa,
-    tituloFinal,
-    feitoFinal,
-  );
 
   res.json(tarefaAtualizada);
 }
@@ -85,14 +74,12 @@ export function deletarTarefa(
   res: Response,
 ): void {
   const idTarefa: number = Number(req.params.id);
-  const tarefaDeletada: Tarefa | undefined = buscarTarefaPorIdNoBanco(idTarefa);
+  const foiDeletado: boolean = tarefasService.deletarTarefa(idTarefa);
 
-  if (!tarefaDeletada) {
+  if (!foiDeletado) {
     res.status(404).send();
     return;
   }
-
-  deletarTarefaNoBanco(idTarefa);
 
   res.status(204).send(); // 204 -> NO CONTENT
 }

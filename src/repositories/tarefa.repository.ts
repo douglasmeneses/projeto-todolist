@@ -1,29 +1,28 @@
 import { db } from "../banco.js";
 import type { Tarefa } from "../types/tarefa.js";
 
-export function buscarTodasTarefas(): Tarefa[] {
+export function buscarTodas(): Tarefa[] {
   const tarefas: Tarefa[] = db
     .prepare("SELECT * FROM tarefas")
     .all() as Tarefa[];
   return tarefas;
 }
 
-export function buscarTarefaPorId(id: number): Tarefa | undefined {
-  const tarefaProcurada: Tarefa | undefined = db
+export function buscarPorId(id: number): Tarefa | undefined {
+  const tarefa: Tarefa | undefined = db
     .prepare("SELECT * FROM tarefas WHERE id = ?")
     .get(id) as Tarefa | undefined;
-  return tarefaProcurada;
+  return tarefa;
 }
 
-export function criarTarefa(titulo: string): Tarefa {
-  const criadoEm: string = new Date().toISOString();
+export function criar(titulo: string, criadoEm: string): Tarefa {
   const novaTarefa: Tarefa = db
     .prepare("INSERT INTO tarefas (titulo, criadoEm) VALUES (?, ?) RETURNING *")
     .get(titulo, criadoEm) as Tarefa;
   return novaTarefa;
 }
 
-export function atualizarTarefa(
+export function atualizar(
   id: number,
   titulo: string,
   feito: number,
@@ -36,6 +35,6 @@ export function atualizarTarefa(
   return tarefaAtualizada;
 }
 
-export function deletarTarefa(id: number): void {
+export function deletar(id: number): void {
   db.prepare("DELETE FROM tarefas WHERE id = ?").run(id);
 }
