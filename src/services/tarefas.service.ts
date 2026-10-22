@@ -1,27 +1,31 @@
 import * as tarefaRepository from "../repositories/tarefas.repository.js";
 import type { Tarefa, AtualizarTarefaDTO } from "../types/tarefa.js";
 
-export function listarTarefas(): Tarefa[] {
-  const tarefas: Tarefa[] = tarefaRepository.buscarTodas();
+export async function listarTarefas(): Promise<Tarefa[]> {
+  const tarefas: Tarefa[] = await tarefaRepository.buscarTodas();
   return tarefas;
 }
 
-export function buscarTarefaPorId(id: number): Tarefa | undefined {
-  const tarefaProcurada: Tarefa | undefined = tarefaRepository.buscarPorId(id);
+export async function buscarTarefaPorId(
+  id: number,
+): Promise<Tarefa | undefined> {
+  const tarefaProcurada: Tarefa | undefined =
+    await tarefaRepository.buscarPorId(id);
   return tarefaProcurada;
 }
 
-export function criarTarefa(titulo: string): Tarefa {
-  const criadoEm: string = new Date().toISOString();
-  const novaTarefa: Tarefa = tarefaRepository.criar(titulo, criadoEm);
+export async function criarTarefa(titulo: string): Promise<Tarefa> {
+  const criadoEm: Date = new Date();
+  const novaTarefa: Tarefa = await tarefaRepository.criar(titulo, criadoEm);
   return novaTarefa;
 }
 
-export function atualizarTarefa(
+export async function atualizarTarefa(
   id: number,
   dados: AtualizarTarefaDTO,
-): Tarefa | undefined {
-  const tarefaExistente: Tarefa | undefined = tarefaRepository.buscarPorId(id);
+): Promise<Tarefa | undefined> {
+  const tarefaExistente: Tarefa | undefined =
+    await tarefaRepository.buscarPorId(id);
 
   if (!tarefaExistente) {
     return undefined;
@@ -30,7 +34,7 @@ export function atualizarTarefa(
   const tituloFinal: string = dados.titulo ?? tarefaExistente.titulo;
   const feitoFinal: number = dados.feito ?? tarefaExistente.feito;
 
-  const tarefaAtualizada: Tarefa = tarefaRepository.atualizar(
+  const tarefaAtualizada: Tarefa = await tarefaRepository.atualizar(
     id,
     tituloFinal,
     feitoFinal,
@@ -39,13 +43,14 @@ export function atualizarTarefa(
   return tarefaAtualizada;
 }
 
-export function deletarTarefa(id: number): boolean {
-  const tarefaExistente: Tarefa | undefined = tarefaRepository.buscarPorId(id);
+export async function deletarTarefa(id: number): Promise<boolean> {
+  const tarefaExistente: Tarefa | undefined =
+    await tarefaRepository.buscarPorId(id);
 
   if (!tarefaExistente) {
     return false;
   }
 
-  tarefaRepository.deletar(id);
+  await tarefaRepository.deletar(id);
   return true;
 }

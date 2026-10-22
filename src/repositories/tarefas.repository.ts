@@ -1,40 +1,39 @@
-import { db } from "../banco.js";
+import { prisma } from "../banco.js";
 import type { Tarefa } from "../types/tarefa.js";
 
-export function buscarTodas(): Tarefa[] {
-  const tarefas: Tarefa[] = db
-    .prepare("SELECT * FROM tarefas")
-    .all() as Tarefa[];
+export async function buscarTodas(): Promise<Tarefa[]> {
+  const tarefas: Tarefa[] = await prisma.tarefa.findMany({
+    orderBy: { id: "asc" },
+  });
   return tarefas;
 }
 
-export function buscarPorId(id: number): Tarefa | undefined {
-  const tarefa: Tarefa | undefined = db
-    .prepare("SELECT * FROM tarefas WHERE id = ?")
-    .get(id) as Tarefa | undefined;
-  return tarefa;
+export async function buscarPorId(id: number): Promise<Tarefa | undefined> {
+  const tarefa: Tarefa | null = await prisma.tarefa.findUnique({
+    where: { id },
+  });
+  return tarefa ?? undefined;
 }
 
-export function criar(titulo: string, criadoEm: string): Tarefa {
-  const novaTarefa: Tarefa = db
-    .prepare("INSERT INTO tarefas (titulo, criadoEm) VALUES (?, ?) RETURNING *")
-    .get(titulo, criadoEm) as Tarefa;
+export async function criar(titulo: string, criadoEm: Date): Promise<Tarefa> {
+  const novaTarefa: Tarefa = await prisma.tarefa.create({
+    data: { titulo, criadoEm },
+  });
   return novaTarefa;
 }
 
-export function atualizar(
+export async function atualizar(
   id: number,
   titulo: string,
   feito: number,
-): Tarefa {
-  const tarefaAtualizada: Tarefa = db
-    .prepare(
-      "UPDATE tarefas SET titulo = ?, feito = ? WHERE id = ? RETURNING *",
-    )
-    .get(titulo, feito, id) as Tarefa;
+): Promise<Tarefa> {
+  const tarefaAtualizada: Tarefa = await prisma.tarefa.update({
+    where: { id },
+    data: { titulo, feito },
+  });
   return tarefaAtualizada;
 }
 
-export function deletar(id: number): void {
-  db.prepare("DELETE FROM tarefas WHERE id = ?").run(id);
+export async function deletar(id: number): Promise<void> {
+  await prisma.tarefa.delete({ where: { id } });
 }

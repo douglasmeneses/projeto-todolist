@@ -3,7 +3,8 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
 
 API RESTful para gerenciamento de tarefas (*To-Do List*) desenvolvida em **Node.js** com **TypeScript** e **Express**. O projeto foi concebido durante a **Mentoria Mithril (Turma Condado)** para demonstrar na prática o desacoplamento arquitetural e a evolução da camada de persistência.
 
@@ -22,7 +23,7 @@ O objetivo principal desta API é ilustrar que **a camada onde os dados residem 
 | :--- | :--- | :--- |
 | **Fase 1** | API em Memória | Array volátil em tempo de execução |
 | **Fase 2** | Banco Relacional Embutido | **SQLite** com SQL nativo via `better-sqlite3` |
-| **Fase 3** | Mapeamento Objeto-Relacional | **Prisma ORM** |
+| **Fase 3** | Mapeamento Objeto-Relacional | **PostgreSQL** + **Prisma ORM** (passo a passo em [`PASSO_A_PASSO_POSTGRES_PRISMA.md`](PASSO_A_PASSO_POSTGRES_PRISMA.md)) |
 
 ---
 
@@ -54,7 +55,8 @@ A estrutura da tabela `tarefas` é concisa e objetiva:
 
 - **Linguagem & Runtime:** [Node.js](https://nodejs.org/) (v22+) e [TypeScript](https://www.typescriptlang.org/)
 - **Servidor HTTP:** [Express](https://expressjs.com/) (v5)
-- **Banco de Dados:** [SQLite](https://www.sqlite.org/) via [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3)
+- **Banco de Dados:** [PostgreSQL](https://www.postgresql.org/) 16
+- **ORM:** [Prisma](https://www.prisma.io/) 7.10.1 com o driver adapter `@prisma/adapter-pg`
 - **Execução em Desenvolvimento:** [tsx](https://github.com/privatenumber/tsx)
 - **Configuração de Ambiente:** `dotenv`
 
@@ -63,8 +65,9 @@ A estrutura da tabela `tarefas` é concisa e objetiva:
 ## 🚀 Como Executar o Projeto
 
 ### Pré-requisitos
-- [Node.js](https://nodejs.org/) (v22 ou superior recomendado)
+- [Node.js](https://nodejs.org/) (v22 ou superior; testado com v24.18.0)
 - [npm](https://www.npmjs.com/)
+- [PostgreSQL](https://www.postgresql.org/download/) 16 instalado e rodando na máquina
 
 ### 1. Clonar o repositório
 ```bash
@@ -78,16 +81,18 @@ npm install
 ```
 
 ### 3. Configurar variáveis de ambiente
-Crie um arquivo `.env` caso deseje customizar a porta do servidor:
+Crie um arquivo `.env` na raiz, trocando a senha pela do seu usuário `postgres`:
 ```env
 PORT=3000
+DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/todolist?schema=public"
 ```
 
-### 4. Inicializar o banco de dados (se necessário)
-O banco SQLite (`todolist.db`) e a tabela são inicializados a partir do script `schema.sql`:
+### 4. Criar a tabela e gerar o Prisma Client
 ```bash
-sqlite3 todolist.db < schema.sql
+npx prisma migrate dev
+npx prisma generate
 ```
+O `migrate dev` cria o banco `todolist` se ele não existir e aplica as migrations de `prisma/migrations`.
 
 ### 5. Iniciar o servidor em modo de desenvolvimento
 ```bash

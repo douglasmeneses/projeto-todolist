@@ -2,7 +2,7 @@ export interface Tarefa {
   id: number;
   titulo: string;
   feito: number;
-  criadoEm: string;
+  criadoEm: Date;
 }
 
 export interface CriarTarefaDTO {

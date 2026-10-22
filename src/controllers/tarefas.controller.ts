@@ -2,18 +2,25 @@ import type { Request, Response } from "express";
 import type { Tarefa, CriarTarefaDTO, AtualizarTarefaDTO } from "../types/tarefa.js";
 import * as tarefasService from "../services/tarefas.service.js";
 
-export function listarTarefas(req: Request, res: Response): void {
-  const tarefas: Tarefa[] = tarefasService.listarTarefas();
+export async function listarTarefas(req: Request, res: Response): Promise<void> {
+  const tarefas: Tarefa[] = await tarefasService.listarTarefas();
   res.json(tarefas); // status code 200 [OK]
 }
 
-export function buscarTarefaPorId(
+export async function buscarTarefaPorId(
   req: Request<{ id: string }>,
   res: Response,
-): void {
+): Promise<void> {
   const idTarefa: number = Number(req.params.id);
+
+  if (!Number.isInteger(idTarefa)) {
+    // "abc" vira NaN, e o Prisma recusa NaN com erro 500
+    res.status(404).send();
+    return;
+  }
+
   const tarefaProcurada: Tarefa | undefined =
-    tarefasService.buscarTarefaPorId(idTarefa);
+    await tarefasService.buscarTarefaPorId(idTarefa);
 
   if (!tarefaProcurada) {
     // falsy values: undefined, null, 0, "", false, NaN
@@ -24,10 +31,10 @@ export function buscarTarefaPorId(
   res.json(tarefaProcurada);
 }
 
-export function criarTarefa(
+export async function criarTarefa(
   req: Request<{}, {}, CriarTarefaDTO>,
   res: Response,
-): void {
+): Promise<void> {
   const titulo: string | undefined = req.body.titulo;
 
   if (!titulo) {
@@ -44,22 +51,27 @@ export function criarTarefa(
     return;
   }
 
-  const novaTarefa: Tarefa = tarefasService.criarTarefa(tituloFormatado);
+  const novaTarefa: Tarefa = await tarefasService.criarTarefa(tituloFormatado);
 
   res.status(201).json(novaTarefa); // 201 -> CREATED
 }
 
-export function atualizarTarefa(
+export async function atualizarTarefa(
   req: Request<{ id: string }, {}, AtualizarTarefaDTO>,
   res: Response,
-): void {
+): Promise<void> {
   const idTarefa: number = Number(req.params.id);
+
+  if (!Number.isInteger(idTarefa)) {
+    // "abc" vira NaN, e o Prisma recusa NaN com erro 500
+    res.status(404).send();
+    return;
+  }
+
   const { titulo, feito }: AtualizarTarefaDTO = req.body;
 
-  const tarefaAtualizada: Tarefa | undefined = tarefasService.atualizarTarefa(
-    idTarefa,
-    { titulo, feito },
-  );
+  const tarefaAtualizada: Tarefa | undefined =
+    await tarefasService.atualizarTarefa(idTarefa, { titulo, feito });
 
   if (!tarefaAtualizada) {
     res.status(404).send();
@@ -69,12 +81,19 @@ export function atualizarTarefa(
   res.json(tarefaAtualizada);
 }
 
-export function deletarTarefa(
+export async function deletarTarefa(
   req: Request<{ id: string }>,
   res: Response,
-): void {
+): Promise<void> {
   const idTarefa: number = Number(req.params.id);
-  const foiDeletado: boolean = tarefasService.deletarTarefa(idTarefa);
+
+  if (!Number.isInteger(idTarefa)) {
+    // "abc" vira NaN, e o Prisma recusa NaN com erro 500
+    res.status(404).send();
+    return;
+  }
+
+  const foiDeletado: boolean = await tarefasService.deletarTarefa(idTarefa);
 
   if (!foiDeletado) {
     res.status(404).send();

@@ -1,7 +1,12 @@
-import Database from "better-sqlite3";
-import fs from "node:fs";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "./generated/prisma/client.js";
 
-export const db: Database.Database = new Database("todolist.db");
+const urlBanco: string | undefined = process.env.DATABASE_URL;
 
-const schemaSql: string = fs.readFileSync("schema.sql", "utf-8");
-db.exec(schemaSql);
+if (!urlBanco) {
+  throw new Error("DATABASE_URL não definida no .env");
+}
+
+const adapter: PrismaPg = new PrismaPg(urlBanco);
+
+export const prisma: PrismaClient = new PrismaClient({ adapter });
